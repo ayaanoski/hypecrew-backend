@@ -9,7 +9,7 @@ import {
 } from "../../controllers/event/event.controller";
 import { upload } from "../../../../middleware/multer.middleware";
 import { getBookingPerformance, getBookingStatistics, getBookingsByEvent } from "../../controllers/event/organizer.event.controller";
-import { getEventByIdForUsers, getOrganizerProfileWithEvents } from "../../controllers/event/public.event.controller";
+import { getEventByIdForUsers, getOrganizerProfileWithEvents, getTopFiveEvents } from "../../controllers/event/public.event.controller";
 
 const router = Router();
 
@@ -34,6 +34,8 @@ router.get("/delete-event", deleteEvent);
 router.get("/view-event-for-users", getEventByIdForUsers);
 
 router.get("/get-upcoming-events", getUpcomingEvents);
+
+router.get("/get-top-five-events", getTopFiveEvents);
 
 router.get("/get-organizer-profile", getOrganizerProfileWithEvents);
 

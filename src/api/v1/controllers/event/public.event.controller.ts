@@ -139,3 +139,89 @@ export const getOrganizerProfileWithEvents = async (req: Request, res: Response)
 		return res.status(500).json({ message: "Internal server error" });
 	}
 };
+
+/**
+ * Get top five upcoming events ordered by total booking count
+ * @returns List of 5 events
+ */
+export const getTopFiveEvents = async (req: Request, res: Response) => {
+	try {
+		const currentDateTime = new Date();
+		const events = await EventModel.find()
+			.populate("organizerId", "full_name email profile_pic")
+			.populate("category", "service_name")
+			.lean();
+
+		const upcomingEvents: any[] = [];
+
+		const getNextRoutineDate = (event: any) => {
+			const dates = Array.isArray(event?.routine?.generatedDates)
+				? [...event.routine.generatedDates].sort()
+				: [];
+			for (const date of dates) {
+				const eventDateTime = new Date(`${date}T${event.startTime}:00`);
+				if (eventDateTime > currentDateTime) {
+					return date;
+				}
+			}
+			return null;
+		};
+
+		for (const event of events) {
+			if (event.type === "Routine" && event.routine?.generatedDates?.length) {
+				const nextDate = getNextRoutineDate(event);
+				if (nextDate) {
+					upcomingEvents.push({
+						...event,
+						startDate: nextDate,
+					});
+				}
+			} else if (event.startDate && event.startTime) {
+				const eventDateTime = new Date(`${event.startDate}T${event.startTime}:00`);
+				if (eventDateTime > currentDateTime) {
+					upcomingEvents.push(event);
+				}
+			}
+		}
+
+		if (upcomingEvents.length === 0) {
+			return res.status(200).json({
+				message: "No upcoming events found",
+				result: []
+			});
+		}
+
+		// Fetch booking counts for all upcoming events
+		const eventIds = upcomingEvents.map(e => e._id);
+		const bookingCounts = await BookingModel.aggregate([
+			{ $match: { eventId: { $in: eventIds }, paymentStatus: "Completed" } },
+			{ $group: { _id: "$eventId", count: { $sum: 1 } } }
+		]);
+
+		const countMap = new Map(bookingCounts.map(bc => [bc._id.toString(), bc.count]));
+
+		upcomingEvents.forEach(event => {
+			event.totalBookings = countMap.get(event._id.toString()) || 0;
+		});
+
+		// Sort by totalBookings descending, then by date ascending
+		upcomingEvents.sort((a, b) => {
+			if (b.totalBookings !== a.totalBookings) {
+				return b.totalBookings - a.totalBookings;
+			}
+			const dateA = new Date(`${a.startDate}T${a.startTime}:00`);
+			const dateB = new Date(`${b.startDate}T${b.startTime}:00`);
+			return dateA.getTime() - dateB.getTime();
+		});
+
+		const topFive = upcomingEvents.slice(0, 5);
+
+		return res.status(200).json({
+			message: "Top five events fetched successfully",
+			result: topFive
+		});
+	} catch (error) {
+		console.error("Error fetching top five events:", error);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+};
