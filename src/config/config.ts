@@ -17,21 +17,17 @@ export const MSG91_CONFIG = {
 	EMAIL_TEMPLATE_ID: "booking_confirmation_html",
 	FROM_EMAIL: "hello@hobi.co.in",
 	FROM_NAME: "Hobi",
-	DOMAIN:"notify.hobi.co.in"
+	DOMAIN: "notify.hobi.co.in"
 };
 
-// Razorpay Configuration
-const RAZORPAY_PROD = {
-	KEY_ID: "rzp_live_S0CCKBUG6HaT2e",
-	KEY_SECRET: "iClB7NoRd8CdVdEY5y6688s3"
-};
+
 
 const RAZORPAY_LOCAL = {
 	KEY_ID: "rzp_test_S2SvPeF9cdb6JN",
 	KEY_SECRET: "77k7pzA1MaTbHEKs09dV9RNM"
 };
 
-export const RAZORPAY_CONFIG = NODE_ENV === "PROD" ? RAZORPAY_PROD : RAZORPAY_LOCAL;
+export const RAZORPAY_CONFIG = RAZORPAY_LOCAL;
 
 
 
