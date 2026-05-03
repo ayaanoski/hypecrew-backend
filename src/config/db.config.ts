@@ -4,13 +4,7 @@ import { NODE_ENV } from "./config";
 console.log("NODE_ENV", String(NODE_ENV));
 
 const mongoURI: string =
-	String(NODE_ENV) == "PROD"
-		? "mongodb+srv://tuhinthakur1233:DY2p354LuqgXPef0@cluster0.r5uuwtr.mongodb.net/HYPECREW_DB?retryWrites=true&w=majority&appName=Cluster0"
-		: String(NODE_ENV) == "DEV"
-			? "mongodb+srv://tuhinthakur1233:DY2p354LuqgXPef0@cluster0.r5uuwtr.mongodb.net/HYPECREW_DB?retryWrites=true&w=majority&appName=Cluster0"
-			: String(NODE_ENV) == "LOCAL"
-				? "mongodb+srv://tuhinthakur1233:DY2p354LuqgXPef0@cluster0.r5uuwtr.mongodb.net/HYPECREW_DB?retryWrites=true&w=majority&appName=Cluster0"
-				: "";
+	"mongodb+srv://tuhinthakur1233:DY2p354LuqgXPef0@cluster0.r5uuwtr.mongodb.net/HYPECREW_DB?retryWrites=true&w=majority&appName=Cluster0"
 
 console.log("First Connection", mongoURI);
 
