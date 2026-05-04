@@ -45,4 +45,5 @@ export interface IEvent {
 		customDates?: string[];
 		generatedDates?: string[];
 	} | null;
+	isPrivate: boolean;
 }

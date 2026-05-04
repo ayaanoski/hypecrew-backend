@@ -38,6 +38,7 @@ const eventSchema: Schema<IEvent> = new Schema<IEvent>(
 		description: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		banner_Image: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		isTicketed: SCHEMA_DEFINITION_PROPERTY.optionalBoolean,
+		isPrivate: SCHEMA_DEFINITION_PROPERTY.optionalBoolean,
 		tickets: [
 			{
 				ticketName: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
