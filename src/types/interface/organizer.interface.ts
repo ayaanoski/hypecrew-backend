@@ -27,4 +27,6 @@ export interface IOrganizer {
 	insurance_for_outdoor_activities: string;
 	health_safety_compliance: string;
 	health_safety_documents: string[];
+	role: "ORGANIZER" | "STAFF";
+	staffOf?: any;
 }

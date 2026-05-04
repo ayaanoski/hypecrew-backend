@@ -187,3 +187,83 @@ export const updateProfilePic = async (req: Request, res: Response) => {
 		});
 	}
 };
+
+export const addStaff = async (req: any, res: Response) => {
+	try {
+		const organizerId = req.user?.id;
+		const { full_name, phone, email, password } = req.body;
+
+		if (!organizerId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		// Check if user already exists in OrganizerModel (including staff)
+		const existingUser = await OrganizerModel.findOne({ $or: [{ email }, { phone }] });
+		if (existingUser) {
+			return res.status(400).json({ message: "Staff with this email or phone already exists" });
+		}
+
+		const newStaff = await new OrganizerModel({
+			full_name,
+			phone,
+			email,
+			password,
+			role: "STAFF",
+			staffOf: organizerId,
+			is_verified: true
+		}).save();
+
+		return res.status(200).json({
+			message: "Staff added successfully",
+			result: newStaff
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: "Failed to add staff", error });
+	}
+};
+
+export const getStaffList = async (req: any, res: Response) => {
+	try {
+		const organizerId = req.user?.id;
+
+		if (!organizerId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const staff = await OrganizerModel.find({ staffOf: organizerId }).select("-password");
+
+		return res.status(200).json({
+			message: "Staff list retrieved successfully",
+			result: staff
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: "Failed to retrieve staff list", error });
+	}
+};
+
+export const deleteStaff = async (req: any, res: Response) => {
+	try {
+		const organizerId = req.user?.id;
+		const { staffId } = req.params;
+
+		if (!organizerId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const deletedStaff = await OrganizerModel.findOneAndDelete({ _id: staffId, staffOf: organizerId });
+
+		if (!deletedStaff) {
+			return res.status(404).json({ message: "Staff not found" });
+		}
+
+		return res.status(200).json({
+			message: "Staff deleted successfully"
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: "Failed to delete staff", error });
+	}
+};
+

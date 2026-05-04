@@ -3,7 +3,10 @@ import {
 	getOrganizerDetails,
 	updateOrganizerDetails,
 	updateOrganizerDocuments,
-	updateProfilePic
+	updateProfilePic,
+	addStaff,
+	getStaffList,
+	deleteStaff
 } from "../../controllers/organizer/organizer.controller";
 import { upload } from "../../../../middleware/multer.middleware";
 import { getOrganizerStats } from "../../controllers/organizer/dashboard.controller";
@@ -31,5 +34,8 @@ router.route("/update_documents").patch(
 // router.route("/update_profile_pic").patch(upload.fields([{ name: "profile_pic", maxCount: 1 }]), updateProfilePic);
 
 router.route("/update_profile_pic").patch(upload.single("profile_pic"), updateProfilePic);
+router.route("/staff").post(jwtAuthMiddleware, addStaff);
+router.route("/staff").get(jwtAuthMiddleware, getStaffList);
+router.route("/staff/:staffId").delete(jwtAuthMiddleware, deleteStaff);
 
 module.exports = router;

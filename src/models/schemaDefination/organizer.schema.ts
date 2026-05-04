@@ -34,7 +34,18 @@ const organizerSchema: Schema<IOrganizer> = new Schema<IOrganizer>(
 		licenses_for_activity_undertaken: SCHEMA_DEFINITION_PROPERTY.optionalNullObject,
 		certifications: SCHEMA_DEFINITION_PROPERTY.optionalNullObject,
 		insurance_for_outdoor_activities: SCHEMA_DEFINITION_PROPERTY.optionalNullObject,
-		health_safety_documents: SCHEMA_DEFINITION_PROPERTY.optionalNullObject
+		health_safety_compliance: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
+		health_safety_documents: SCHEMA_DEFINITION_PROPERTY.optionalNullObject,
+		role: {
+			type: String,
+			enum: ["ORGANIZER", "STAFF"],
+			default: "ORGANIZER"
+		},
+		staffOf: {
+			type: Schema.Types.ObjectId,
+			ref: "organizers",
+			default: null
+		}
 	},
 	GENERAL_SCHEMA_OPTIONS
 );
