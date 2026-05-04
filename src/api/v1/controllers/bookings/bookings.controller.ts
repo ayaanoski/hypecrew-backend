@@ -800,3 +800,43 @@ export const updateMultipleBookings = async (req: Request, res: Response) => {
 		});
 	}
 };
+
+export const getBookingById = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		if (!id) {
+			return res.status(400).json({ message: "Booking ID is required" });
+		}
+
+		const booking = await BookingModel.findById(id)
+			.populate("eventId")
+			.populate("userId");
+
+		if (!booking) {
+			return res.status(404).json({ message: "Booking not found" });
+		}
+
+		const event: any = booking.eventId;
+		const ticket = event?.tickets.find((t: any) => t._id.toString() === booking.ticketId.toString());
+
+		const result = {
+			...booking.toObject(),
+			bookingId: booking._id.toString(),
+			eventDetails: {
+				title: event?.title
+			},
+			userDetails: {
+				full_name: (booking.userId as any)?.full_name
+			},
+			ticketDetails: {
+				ticketName: ticket?.ticketName
+			}
+		};
+
+		return res.status(200).json(result);
+	} catch (error) {
+		console.error("Error fetching booking:", error);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+};
+

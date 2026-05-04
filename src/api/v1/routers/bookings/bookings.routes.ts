@@ -7,7 +7,8 @@ import {
 	updateBookingStatus,
 	createMultipleBookings,
 	updateMultipleBookings,
-	inviteGuest
+	inviteGuest,
+	getBookingById
 } from "../../controllers/bookings/bookings.controller";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.patch("/refund-booking-bookings", refundBooking);
 router.patch("/update-status-booking", updateBookingStatus);
 
 router.get("/get-organizer-booking", getOrganizerBookings);
+router.get("/:id", getBookingById);
 
 // router.get("/get-user-bookings", getUserBookings);
 
