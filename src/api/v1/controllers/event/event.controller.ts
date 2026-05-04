@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import EventModel from "../../../../models/event.model";
 import { MESSAGE } from "../../../../constants/message";
-import { uploadImageToS3Service } from "../../../../services/uploadImageService";
-import mongoose from "mongoose";
 import { createNotification } from "../../../../types/interface/notifications";
+import { uploadImageToCloudinary } from "../../../../services/cloudinary.service";
+import mongoose from "mongoose";
 
 export const createEvent = async (req: Request, res: Response) => {
 	try {
@@ -20,7 +20,7 @@ export const createEvent = async (req: Request, res: Response) => {
 		let banner_Image_Url: any = "";
 
 		try {
-			banner_Image_Url = (await uploadImageToS3Service("banner_Image", banner_Image_Buffer)) || "";
+			banner_Image_Url = (await uploadImageToCloudinary(banner_Image_Buffer, "event_banners")) || "";
 		} catch (error) {
 			return res.status(400).json({
 				message: MESSAGE.post.fail
@@ -145,6 +145,14 @@ export const createEvent = async (req: Request, res: Response) => {
 			delete eventDetails.routine;
 			delete eventDetails.subscriptionPricing;
 			delete eventDetails.subscriptionCapacity;
+		}
+		
+		// Parse boolean fields
+		if (eventDetails.isPrivate) {
+			eventDetails.isPrivate = eventDetails.isPrivate === "true" || eventDetails.isPrivate === true;
+		}
+		if (eventDetails.isTicketed) {
+			eventDetails.isTicketed = eventDetails.isTicketed === "true" || eventDetails.isTicketed === true;
 		}
 
 		const formatDate = (date: Date) => {
@@ -304,10 +312,10 @@ export const createEvent = async (req: Request, res: Response) => {
 			totalEventsCreated: createdEvents.length
 		});
 	} catch (error) {
-		console.error(error);
+		console.error("Create event error:", error);
 		return res.status(400).json({
 			message: MESSAGE.post.fail,
-			error
+			error: error instanceof Error ? error.message : error
 		});
 	}
 };
@@ -438,7 +446,7 @@ export const updateEventBanner = async (req: Request, res: Response) => {
 		let banner_Image_Url: any = "";
 
 		try {
-			banner_Image_Url = (await uploadImageToS3Service("banner_Image", banner_Image_Buffer)) || "";
+			banner_Image_Url = (await uploadImageToCloudinary(banner_Image_Buffer, "event_banners")) || "";
 		} catch (error) {
 			return res.status(400).json({
 				message: MESSAGE.patch.fail

@@ -3,7 +3,7 @@ import { GENERAL_SCHEMA_OPTIONS } from "../../constants/model/schemaOption";
 import SCHEMA_DEFINITION_PROPERTY from "../../constants/model/model.constant";
 import { IEvent } from "../../types/interface/event.interface";
 
-const eventSchema: Schema<IEvent> = new Schema<IEvent>(
+const eventSchema = new Schema<IEvent>(
 	{
 		organizerId: {
 			type: Schema.Types.ObjectId,
@@ -38,7 +38,10 @@ const eventSchema: Schema<IEvent> = new Schema<IEvent>(
 		description: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		banner_Image: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		isTicketed: SCHEMA_DEFINITION_PROPERTY.optionalBoolean,
-		isPrivate: SCHEMA_DEFINITION_PROPERTY.optionalBoolean,
+		isPrivate: {
+			type: Boolean,
+			default: false
+		},
 		tickets: [
 			{
 				ticketName: SCHEMA_DEFINITION_PROPERTY.optionalNullString,

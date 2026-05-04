@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import OrganizerModel from "../../../../models/organizer.model";
 import { MESSAGE } from "../../../../constants/message";
-import { uploadImageToS3Service } from "../../../../services/uploadImageService";
-import { uploadPdfToS3Service } from "../../../../services/uploadPdfToS3Service";
+import { uploadImageToCloudinary } from "../../../../services/cloudinary.service";
 
 export const getOrganizerDetails = async (req: any, res: Response) => {
 	try {
@@ -103,21 +102,21 @@ export const updateOrganizerDocuments = async (req: any, res: Response) => {
 						// If file is PDF, use PDF uploader; if image, use image uploader; otherwise try to infer from originalname
 						if (mimeType === "application/pdf" || (file.originalname && file.originalname.toLowerCase().endsWith(".pdf"))) {
 							{
-								const uploaded = await uploadPdfToS3Service(field, fileBuffer);
+								const uploaded = await uploadImageToCloudinary(fileBuffer, "organizer_docs");
 								fileUrl = uploaded ?? null;
 							}
 						} else if (mimeType.startsWith("image/")) {
 							{
-								const uploaded = await uploadImageToS3Service(field, fileBuffer);
+								const uploaded = await uploadImageToCloudinary(fileBuffer, "organizer_docs");
 								fileUrl = uploaded ?? null;
 							}
 						} else {
 							// fallback: if filename ends with .pdf treat as pdf, else treat as image
 							if (file.originalname && file.originalname.toLowerCase().endsWith(".pdf")) {
-								const uploaded = await uploadPdfToS3Service(field, fileBuffer);
+								const uploaded = await uploadImageToCloudinary(fileBuffer, "organizer_docs");
 								fileUrl = uploaded ?? null;
 							} else {
-								const uploaded = await uploadImageToS3Service(field, fileBuffer);
+								const uploaded = await uploadImageToCloudinary(fileBuffer, "organizer_docs");
 								fileUrl = uploaded ?? null;
 							}
 						}
@@ -167,7 +166,7 @@ export const updateProfilePic = async (req: Request, res: Response) => {
 		}
 
 		const fileBuffer = req.file.buffer;
-		const fileUrl = await uploadImageToS3Service("profile_pic", fileBuffer);
+		const fileUrl = await uploadImageToCloudinary(fileBuffer, "profile_pics");
 
 		console.log("======>file", fileUrl);
 		const updatedOrganizer = await OrganizerModel.findByIdAndUpdate(
