@@ -298,4 +298,28 @@ export const updateStaff = async (req: any, res: Response) => {
 	}
 };
 
+export const bulkUpdateStaffEvents = async (req: any, res: Response) => {
+	try {
+		const organizerId = req.user?.id;
+		const { assignedEvents } = req.body;
+
+		if (!organizerId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		await OrganizerModel.updateMany(
+			{ staffOf: organizerId, role: "STAFF" },
+			{ assignedEvents: assignedEvents || [] }
+		);
+
+		return res.status(200).json({
+			message: "All staff updated successfully"
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: "Failed to update staff in bulk", error });
+	}
+};
+
+
 
