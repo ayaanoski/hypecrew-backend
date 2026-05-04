@@ -6,13 +6,15 @@ import {
 	updateBooking,
 	updateBookingStatus,
 	createMultipleBookings,
-	updateMultipleBookings
+	updateMultipleBookings,
+	inviteGuest
 } from "../../controllers/bookings/bookings.controller";
 
 const router = Router();
 
 router.post("/create-booking", createBooking);
 router.post("/create-multiple-bookings", createMultipleBookings);
+router.post("/invite-guest", inviteGuest);
 
 router.patch("/confirm-booking", updateBooking);
 router.patch("/confirm-multiple-bookings", updateMultipleBookings);

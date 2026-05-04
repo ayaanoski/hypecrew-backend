@@ -3,7 +3,7 @@ import { GENERAL_SCHEMA_OPTIONS } from "../../constants/model/schemaOption";
 import SCHEMA_DEFINITION_PROPERTY from "../../constants/model/model.constant";
 import { IBooking } from "../../types/interface/booking.interface";
 
-const bookingSchema: Schema<IBooking> = new Schema<IBooking>(
+const bookingSchema = new Schema<IBooking>(
 	{
 		userId: {
 			type: Schema.Types.ObjectId,
@@ -24,6 +24,11 @@ const bookingSchema: Schema<IBooking> = new Schema<IBooking>(
 			type: String,
 			enum: ["Pending", "Completed", "Failed", "Refunded"],
 			default: "Pending"
+		},
+		paymentMethod: {
+			type: String,
+			enum: ["online", "cash"],
+			default: "online"
 		},
 		booking_status: {
 			type: String,

@@ -66,13 +66,48 @@ export const getBookingStatistics = async (req: Request, res: Response) => {
 		const result = await BookingModel.aggregate(aggregationPipeline);
 		const eventDetails = await EventModel.findById(eventId).populate("category", "service_name");
 
+		// Calculate per-ticket availability
+		let ticketAvailability = [];
+		if (eventDetails && eventDetails.tickets) {
+			ticketAvailability = await Promise.all(
+				eventDetails.tickets.map(async (ticket: any) => {
+					const totalBookedForTicket = await BookingModel.aggregate([
+						{
+							$match: {
+								eventId: new mongoose.Types.ObjectId(eventId),
+								ticketId: ticket._id,
+								paymentStatus: "Completed"
+							}
+						},
+						{
+							$group: {
+								_id: null,
+								totalBooked: { $sum: "$ticketsCount" }
+							}
+						}
+					]);
+
+					const bookedCount = totalBookedForTicket.length > 0 ? totalBookedForTicket[0].totalBooked : 0;
+					return {
+						ticketId: ticket._id,
+						ticketName: ticket.ticketName,
+						ticketPrice: ticket.ticketPrice,
+						totalQuantity: ticket.quantity,
+						bookedCount,
+						remainingCount: Math.max(0, ticket.quantity - bookedCount)
+					};
+				})
+			);
+		}
+
 		return res.status(200).json({
 			totalBookings: result[0].totalBookings[0]?.count || 0,
 			bookingsThisWeek: result[0].bookingsThisWeek[0]?.count || 0,
 			bookingsToday: result[0].bookingsToday[0]?.count || 0,
 			totalIncome: result[0].totalIncome[0]?.total || 0,
 			todaysIncome: result[0].todaysIncome[0]?.total || 0,
-			eventDetails: eventDetails || {}
+			eventDetails: eventDetails || {},
+			ticketAvailability
 		});
 	} catch (error) {
 		console.error(error);
@@ -156,7 +191,8 @@ export const getBookingsByEvent = async (req: Request, res: Response) => {
 					userDetails: "$userDetails",
 					ticketDetails: "$ticketDetails",
 					eventType: "$eventDetails.type",
-					subscriptionStartDate: "$subscriptionStartDate"
+					subscriptionStartDate: "$subscriptionStartDate",
+					paymentMethod: { $ifNull: ["$paymentMethod", "online"] }
 				}
 			}
 		]);

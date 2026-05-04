@@ -584,6 +584,123 @@ export const createMultipleBookings = async (req: Request, res: Response) => {
 	}
 };
 
+export const inviteGuest = async (req: Request, res: Response) => {
+	try {
+		const { eventId, ticketId, ticketsCount, guestPhone, guestName, guestEmail } = req.body;
+
+		if (!eventId || !ticketId || !ticketsCount || !guestPhone) {
+			return res.status(400).json({
+				message: MESSAGE.post.custom("Event ID, Ticket ID, Tickets Count, and Guest Phone are required")
+			});
+		}
+
+		// Find or validate the user by phone
+		let user: any = await UserModel.findOne({ phone: guestPhone });
+		if (!user) {
+			// Create a minimal user record for the guest
+			user = await new UserModel({
+				full_name: guestName || "Guest",
+				phone: guestPhone,
+				email: guestEmail || null,
+				gender: "OTHER"
+			}).save();
+		}
+
+		const event = await EventModel.findById(eventId);
+		if (!event) {
+			return res.status(404).json({
+				message: MESSAGE.post.custom("Event not found")
+			});
+		}
+
+		const ticket = event.tickets.find((t: any) => t._id.toString() === ticketId);
+		if (!ticket) {
+			return res.status(400).json({
+				message: MESSAGE.post.custom("Invalid Ticket ID")
+			});
+		}
+
+		// Check ticket availability (count both online and cash confirmed bookings)
+		const totalBookedTickets = await BookingModel.aggregate([
+			{
+				$match: {
+					eventId: new mongoose.Types.ObjectId(eventId),
+					ticketId: new mongoose.Types.ObjectId(ticketId),
+					paymentStatus: "Completed"
+				}
+			},
+			{
+				$group: {
+					_id: null,
+					totalBooked: { $sum: "$ticketsCount" }
+				}
+			}
+		]);
+
+		const bookedCount = totalBookedTickets.length > 0 ? totalBookedTickets[0].totalBooked : 0;
+
+		if (bookedCount + ticketsCount > ticket.quantity) {
+			return res.status(400).json({
+				message: MESSAGE.post.custom("Not enough tickets available")
+			});
+		}
+
+		const ticketAmount = ticket.ticketPrice * ticketsCount;
+
+		// Build subscription fields for Routine events
+		const subscriptionFields = buildSubscriptionFields(event, null);
+
+		// Create booking directly as Completed (cash payment — no Razorpay)
+		const newBooking = await new BookingModel({
+			userId: user._id,
+			eventId,
+			ticketId,
+			amountPaid: ticketAmount,
+			ticketsCount,
+			transactionId: null,
+			orderId: null,
+			paymentStatus: "Completed",
+			paymentMethod: "cash",
+			booking_status: "Pending",
+			...subscriptionFields
+		}).save();
+
+		// Credit organizer wallet
+		try {
+			if (event.organizerId) {
+				await creditWallet(event.organizerId.toString(), ticketAmount);
+			}
+		} catch (walletError) {
+			console.error("Error crediting wallet for guest invite:", walletError);
+		}
+
+		// Send confirmation SMS/Email
+		try {
+			if (user.phone) {
+				const eventName = event?.title || "Event";
+				await sendBookingConfirmationSms(user.phone, eventName);
+			}
+			if (user.email) {
+				const eventName = event?.title || "Event";
+				await sendBookingConfirmationEmail(user.email, user.full_name || user.name, eventName, event?._id.toString());
+			}
+		} catch (notifyError) {
+			console.error("Error sending guest invite notification:", notifyError);
+		}
+
+		return res.status(200).json({
+			message: MESSAGE.post.custom("Guest invited successfully"),
+			result: newBooking
+		});
+	} catch (error) {
+		console.error("Error inviting guest:", error);
+		return res.status(400).json({
+			message: MESSAGE.post.fail,
+			error
+		});
+	}
+};
+
 export const updateMultipleBookings = async (req: Request, res: Response) => {
 	try {
 		const { transactionId, updates } = req.body; // updates: Array<{ bookingId, platformfee }>

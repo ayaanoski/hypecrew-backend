@@ -5,12 +5,13 @@ export interface IBooking {
 	eventId: Types.ObjectId;
 	ticketId: Types.ObjectId;
 	amountPaid: number;
-	paymentStatus?: "Pending" | "Completed" | "Failed"; // Optional with default value
-	ticketsCount?: number; // Optional, in case of multiple ticket bookings
-	transactionId?: string | null; // For online payments, can be null if not applicable
-	orderId?: string | null; // For online payments, can be null if not applicable
-	refundId?: string | null; // For online payments, can be null if not applicable
-	booking_status?: "Pending" | "check-in" | "in-progress" | "Completed" | "Canceled"; // Optional with default value
+	paymentStatus?: "Pending" | "Completed" | "Failed" | "Refunded";
+	paymentMethod?: "online" | "cash";
+	ticketsCount?: number;
+	transactionId?: string | null;
+	orderId?: string | null;
+	refundId?: string | null;
+	booking_status?: "Pending" | "check-in" | "in-progress" | "Completed" | "Cancelled" | "Canceled";
 	subscriptionDates?: string[];
 	subscriptionStartDate?: string | null;
 	subscriptionEndDate?: string | null;
