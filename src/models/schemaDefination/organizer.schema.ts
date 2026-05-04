@@ -45,7 +45,11 @@ const organizerSchema: Schema<IOrganizer> = new Schema<IOrganizer>(
 			type: Schema.Types.ObjectId,
 			ref: "organizers",
 			default: null
-		}
+		},
+		assignedEvents: [{
+			type: Schema.Types.ObjectId,
+			ref: "events"
+		}]
 	},
 	GENERAL_SCHEMA_OPTIONS
 );

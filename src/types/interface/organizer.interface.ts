@@ -29,4 +29,5 @@ export interface IOrganizer {
 	health_safety_documents: string[];
 	role: "ORGANIZER" | "STAFF";
 	staffOf?: any;
+	assignedEvents?: any[];
 }

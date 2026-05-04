@@ -191,7 +191,7 @@ export const updateProfilePic = async (req: Request, res: Response) => {
 export const addStaff = async (req: any, res: Response) => {
 	try {
 		const organizerId = req.user?.id;
-		const { full_name, phone, email, password } = req.body;
+		const { full_name, phone, email, password, assignedEvents } = req.body;
 
 		if (!organizerId) {
 			return res.status(401).json({ message: "Unauthorized" });
@@ -210,6 +210,7 @@ export const addStaff = async (req: any, res: Response) => {
 			password,
 			role: "STAFF",
 			staffOf: organizerId,
+			assignedEvents: assignedEvents || [],
 			is_verified: true
 		}).save();
 
@@ -266,4 +267,35 @@ export const deleteStaff = async (req: any, res: Response) => {
 		return res.status(500).json({ message: "Failed to delete staff", error });
 	}
 };
+
+export const updateStaff = async (req: any, res: Response) => {
+	try {
+		const organizerId = req.user?.id;
+		const { staffId } = req.params;
+		const { full_name, phone, email, assignedEvents } = req.body;
+
+		if (!organizerId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const updatedStaff = await OrganizerModel.findOneAndUpdate(
+			{ _id: staffId, staffOf: organizerId },
+			{ full_name, phone, email, assignedEvents },
+			{ new: true }
+		).select("-password");
+
+		if (!updatedStaff) {
+			return res.status(404).json({ message: "Staff not found" });
+		}
+
+		return res.status(200).json({
+			message: "Staff updated successfully",
+			result: updatedStaff
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: "Failed to update staff", error });
+	}
+};
+
 

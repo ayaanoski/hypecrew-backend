@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 import EventModel from "../../../../models/event.model";
 import BookingModel from "../../../../models/booking.model";
+import OrganizerModel from "../../../../models/organizer.model";
 
 export const getOrganizerStats = async (req: Request, res: Response) => {
 	try {
-		const { organizerId }: any = req.query;
+		const { organizerId, staffId }: any = req.query;
 
 		// Validate organizerId
 		if (!mongoose.Types.ObjectId.isValid(organizerId)) {
@@ -13,9 +14,23 @@ export const getOrganizerStats = async (req: Request, res: Response) => {
 		}
 
 		// Find all events posted by this organizer
-		const events = await EventModel.find({ organizerId }, { _id: 1 });
+		let events = await EventModel.find({ organizerId }, { _id: 1 });
+		let eventIdsRaw = events.map((event) => event._id.toString());
 
-		if (events.length === 0) {
+		// If staffId is provided, further restrict to assigned events
+		if (staffId && mongoose.Types.ObjectId.isValid(staffId)) {
+			const staff = await OrganizerModel.findById(staffId).select("assignedEvents");
+			if (staff && staff.assignedEvents && staff.assignedEvents.length > 0) {
+				const assignedIds = staff.assignedEvents.map((id: any) => id.toString());
+				eventIdsRaw = eventIdsRaw.filter(id => assignedIds.includes(id));
+				events = events.filter(e => assignedIds.includes(e._id.toString()));
+			} else if (staffId) {
+				// If staff exists but has no assigned events, return 0 stats
+				eventIdsRaw = [];
+			}
+		}
+
+		if (eventIdsRaw.length === 0) {
 			return res.status(200).json({
 				totalEvents: 0,
 				totalBookings: 0,
@@ -29,7 +44,7 @@ export const getOrganizerStats = async (req: Request, res: Response) => {
 		}
 
 		// Extract event IDs
-		const eventIds = events.map((event) => event._id);
+		const eventIds = eventIdsRaw.map((id) => new mongoose.Types.ObjectId(id));
 
 		// Get start and end of the current and previous months
 		const now = new Date();

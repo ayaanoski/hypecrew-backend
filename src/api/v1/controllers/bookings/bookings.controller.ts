@@ -11,6 +11,7 @@ import UserModel from "../../../../models/user.model";
 import { sendBookingConfirmationSms } from "../../../../services/sms/sms.service";
 import { RAZORPAY_CONFIG } from "../../../../config/config";
 import { sendBookingConfirmationEmail } from "../../../../services/mail/mail.service";
+import OrganizerModel from "../../../../models/organizer.model";
 
 const razorpayInstance = new Razorpay({
 	key_id: RAZORPAY_CONFIG.KEY_ID,
@@ -376,7 +377,7 @@ export const getUserBookings = async (req: Request, res: Response) => {
 
 export const getOrganizerBookings = async (req: Request, res: Response) => {
 	try {
-		const { organizerId, page = 1, limit = 10 } = req.query;
+		const { organizerId, page = 1, limit = 10, eventId, staffId } = req.query;
 		const pageNumber = parseInt(page as string) || 1;
 		const limitNumber = parseInt(limit as string) || 10;
 		const skip = (pageNumber - 1) * limitNumber;
@@ -385,22 +386,48 @@ export const getOrganizerBookings = async (req: Request, res: Response) => {
 			return res.status(400).json({ message: "Organizer ID is required" });
 		}
 
-		// Find events created by the organizer
-		const events = await EventModel.find({ organizerId }).select("_id");
-		const eventIds = events.map((event) => event._id);
+		// Find events created by the organizer to ensure the staff/organizer has access
+		const organizerEvents = await EventModel.find({ organizerId }).select("_id");
+		let organizerEventIds = organizerEvents.map((event) => event._id.toString());
 
-		if (eventIds.length === 0) {
+		if (organizerEventIds.length === 0) {
 			return res.status(200).json({ message: "No bookings found", result: [] });
 		}
 
+		// If staffId is provided, further restrict the event list to their assigned events
+		if (staffId) {
+			const staff = await OrganizerModel.findById(staffId).select("assignedEvents");
+			if (staff && staff.assignedEvents && staff.assignedEvents.length > 0) {
+				const assignedIds = staff.assignedEvents.map((id: any) => id.toString());
+				// Intersection of organizer's events and staff's assigned events
+				organizerEventIds = organizerEventIds.filter(id => assignedIds.includes(id));
+			}
+		}
+
+		if (organizerEventIds.length === 0) {
+			return res.status(200).json({ message: "No bookings found for your assigned events", result: [] });
+		}
+
+		// Build the query
+		const query: any = { eventId: { $in: organizerEventIds } };
+		
+		if (eventId) {
+			// If a specific eventId is provided, verify it belongs to this allowed list
+			if (!organizerEventIds.includes(eventId.toString())) {
+				return res.status(403).json({ message: "Unauthorized to access bookings for this event" });
+			}
+			query.eventId = eventId;
+		}
+
 		// Find bookings for those events with pagination
-		const bookings = await BookingModel.find({ eventId: { $in: eventIds } })
+		const bookings = await BookingModel.find(query)
 			.populate("eventId")
 			.populate("userId")
+			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(limitNumber);
 
-		const totalBookings = await BookingModel.countDocuments({ eventId: { $in: eventIds } });
+		const totalBookings = await BookingModel.countDocuments(query);
 		const totalPages = Math.ceil(totalBookings / limitNumber);
 
 		return res.status(200).json({
