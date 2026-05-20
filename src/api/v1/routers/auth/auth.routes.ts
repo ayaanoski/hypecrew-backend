@@ -1,6 +1,7 @@
 import express from "express";
 import {
 	AnonimusLogin,
+	googleAuthUser,
 	loginAdmin,
 	loginOrganizer,
 	loginUser,
@@ -31,6 +32,7 @@ router.route("/verify-otp").post(verifyOtp); // New method to verify OTP
 router.route("/user-signup").post(checkUserExistenceMiddleware, signUpUser);
 router.route("/user-login").post(validateUserExistenceMiddleware, loginUser);
 router.route("/anonimus-login").post(AnonimusLogin);
+router.route("/google-auth").post(googleAuthUser);
 
 router.route("/organizer-signup").post(checkProviderExistenceMiddleware, signUpOrganizer);
 router.route("/organizer-login").post(validateProviderExistenceMiddleware, loginOrganizer);

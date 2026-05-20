@@ -6,4 +6,5 @@ export interface IUser {
 	address: string;
 	password: string;
 	phone: string;
+	googleUid?: string;
 }

@@ -11,7 +11,8 @@ const userSchema: Schema<IUser> = new Schema<IUser>(
 		gender: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		phone: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
 		address: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
-		password: SCHEMA_DEFINITION_PROPERTY.optionalNullString
+		password: SCHEMA_DEFINITION_PROPERTY.optionalNullString,
+		googleUid: SCHEMA_DEFINITION_PROPERTY.optionalNullString
 	},
 	GENERAL_SCHEMA_OPTIONS
 );
