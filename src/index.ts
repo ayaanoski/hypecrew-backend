@@ -7,7 +7,7 @@ import connectDb from "./config/db.config";
 // dotenv.config();
 const app = express();
 
-const port = process.env.PORT || 8989;
+const port = 8989;
 
 const options: cors.CorsOptions = {
 	// Allow common headers including Authorization so protected routes pass preflight
