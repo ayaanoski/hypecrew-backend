@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
 	createBooking,
 	getOrganizerBookings,
+	getUserBookings,
 	refundBooking,
 	updateBooking,
 	updateBookingStatus,
@@ -25,6 +26,7 @@ router.patch("/refund-booking-bookings", refundBooking);
 router.patch("/update-status-booking", updateBookingStatus);
 
 router.get("/get-organizer-booking", getOrganizerBookings);
+router.get("/get-user-bookings", getUserBookings);
 router.get("/:id", getBookingById);
 
 // router.get("/get-user-bookings", getUserBookings);

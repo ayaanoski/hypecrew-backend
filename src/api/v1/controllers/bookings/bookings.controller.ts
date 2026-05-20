@@ -360,7 +360,9 @@ export const getUserBookings = async (req: Request, res: Response) => {
 			return res.status(400).json({ message: "User ID is required" });
 		}
 
-		const bookings = await BookingModel.find({ userId });
+		const bookings = await BookingModel.find({ userId })
+			.populate("eventId")
+			.sort({ createdAt: -1 });
 
 		return res.status(200).json({
 			message: MESSAGE.get.succ,
