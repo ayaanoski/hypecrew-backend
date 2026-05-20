@@ -23,8 +23,8 @@ export const MSG91_CONFIG = {
 
 
 const RAZORPAY_LOCAL = {
-	KEY_ID: "rzp_test_S2SvPeF9cdb6JN",
-	KEY_SECRET: "77k7pzA1MaTbHEKs09dV9RNM"
+	KEY_ID: "rzp_live_Srkd5YfpuEylzo",
+	KEY_SECRET: "nOzyefE41GQZExd5v6KzT8wP"
 };
 
 export const RAZORPAY_CONFIG = RAZORPAY_LOCAL;

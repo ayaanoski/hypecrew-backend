@@ -4,16 +4,16 @@ export const calculatePlatformFee = (ticketPrice: number): number => {
 	let maxCap: number | null = null;
 
 	if (ticketPrice <= 500) {
-		baseFee = 20;
+		baseFee = 2;
 		percentage = 0.06;
 	} else if (ticketPrice <= 1500) {
-		baseFee = 30;
+		baseFee = 3;
 		percentage = 0.07;
 	} else if (ticketPrice <= 3000) {
-		baseFee = 40;
+		baseFee = 4;
 		percentage = 0.06;
 	} else {
-		baseFee = 60;
+		baseFee = 6;
 		percentage = 0.04;
 		maxCap = 300;
 	}
