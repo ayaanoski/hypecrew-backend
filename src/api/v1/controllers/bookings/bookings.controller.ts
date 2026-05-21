@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import BookingModel from "../../../../models/booking.model";
 import EventModel from "../../../../models/event.model";
+import TransactionModel from "../../../../models/transaction.model";
 import { MESSAGE } from "../../../../constants/message";
 import Razorpay from "razorpay";
 import { calculatePlatformFee } from "../../../../services/platformFee";
@@ -326,7 +327,34 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 			});
 		}
 
-		const booking = await BookingModel.findById(bookingId);
+		let effectiveBookingId = bookingId;
+		if (bookingId && !mongoose.Types.ObjectId.isValid(bookingId)) {
+			if (bookingId.startsWith("pay_")) {
+				const txn = await TransactionModel.findOne({ razorPay_payment_id: bookingId });
+				if (txn && txn.bookingId) {
+					effectiveBookingId = txn.bookingId;
+				} else {
+					return res.status(404).json({
+						message: "Booking not found for payment reference"
+					});
+				}
+			} else if (bookingId.startsWith("order_")) {
+				const bookingObj = await BookingModel.findOne({ orderId: bookingId });
+				if (bookingObj) {
+					effectiveBookingId = bookingObj._id.toString();
+				} else {
+					return res.status(404).json({
+						message: "Booking not found for order reference"
+					});
+				}
+			} else {
+				return res.status(400).json({
+					message: "Invalid booking reference format"
+				});
+			}
+		}
+
+		const booking = await BookingModel.findById(effectiveBookingId);
 		if (!booking) {
 			return res.status(404).json({
 				message: MESSAGE.put.custom("Booking not found")
@@ -837,7 +865,28 @@ export const getBookingById = async (req: Request, res: Response) => {
 			return res.status(400).json({ message: "Booking ID is required" });
 		}
 
-		const booking = await BookingModel.findById(id)
+		let effectiveId = id;
+		if (id && !mongoose.Types.ObjectId.isValid(id)) {
+			if (id.startsWith("pay_")) {
+				const txn = await TransactionModel.findOne({ razorPay_payment_id: id });
+				if (txn && txn.bookingId) {
+					effectiveId = txn.bookingId;
+				} else {
+					return res.status(404).json({ message: "Booking not found for payment reference" });
+				}
+			} else if (id.startsWith("order_")) {
+				const bookingObj = await BookingModel.findOne({ orderId: id });
+				if (bookingObj) {
+					effectiveId = bookingObj._id.toString();
+				} else {
+					return res.status(404).json({ message: "Booking not found for order reference" });
+				}
+			} else {
+				return res.status(400).json({ message: "Invalid ID or payment reference format" });
+			}
+		}
+
+		const booking = await BookingModel.findById(effectiveId)
 			.populate("eventId")
 			.populate("userId");
 
